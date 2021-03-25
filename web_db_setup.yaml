@@ -1,0 +1,42 @@
+- name: setting up web serv
+  hosts: websrv
+  become: yes
+  tasks:
+    - name: installing httpd
+      yum:
+        name: httpd
+        state: present
+    - name: start & enable httpd
+      service:
+        name: httpd
+        state: started
+        enabled: yes
+    - name: copying index.htnl
+      copy:
+        src: index.html
+        dest: /var/www/html
+
+- name: setting up db serv
+  hosts: dbsrv
+  become: yes
+  tasks:
+    - name: installing Mariadb deps python
+      yum:
+        pkg: MySQL-python
+        state: present
+    - name: installing Mariadb-server
+      yum:
+        name: mariadb-server
+        state: present
+    - name: start & enable Mariadb
+      service:
+        name: mariadb
+        state: started
+        enabled: yes
+    - name: Create database user with name Ashok with all database privileges
+      mysql_user:
+        name: Ashok
+        password: Hello
+        priv: '*.*:ALL'
+        state: present
+:
