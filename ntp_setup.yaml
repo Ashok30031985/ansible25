@@ -1,0 +1,84 @@
+[root@ip-172-31-16-44 black_panther]# cat ntp_setup.yaml
+---
+  - name: setting up NTP service
+    hosts: all
+    tasks:
+      - name: installing packages on centos
+        yum:
+          name: "{{item}}"
+          state: present
+        when: ansible_os_family == "RedHat"
+        loop:
+          -  ntp
+          -  wget
+          -  git
+          -  unzip
+          -  zip
+
+      - name: installing packages on ubuntu
+        apt:
+          name: "{{item}}"
+          state: present
+          update_cache: yes
+          cache_valid_time: 86400
+        when: ansible_os_family == "Debian"
+        loop:
+          -  ntp
+          -  wget
+          -  git
+          -  unzip
+          -  zip
+
+      - name: Add the users
+        user:
+          name: "{{item}}"
+        loop:
+          -  alpha
+          -  beta
+          -  gamma
+
+      - name: start & enable ntp service on centos
+        service:
+          name: ntpd
+          state: started
+          enabled: yes
+        when: ansible_os_family == "RedHat"
+
+      - name: start & enable ntp service ubuntu
+        service:
+          name: ntp
+          state: started
+          enabled: yes
+        when: ansible_os_family == "Debian"
+
+      - name: push ntp conf to redhat servers
+        template:
+          src: templates/ntp_conf_redhat
+          dest: /etc/ntp.conf
+          backup: yes
+        when: ansible_os_family == "RedHat"
+        notify:
+          - restart ntp service on Redhat servers
+
+      - name: push ntp conf to centos servers
+        template:
+          src: templates/ntp_conf_debian
+          dest: /etc/ntp.conf
+          backup: yes
+        when: ansible_os_family == "Debian"
+        notify:
+          - restart ntp service on Debian servers
+
+    handlers:
+      - name: restart ntp service on Redhat servers
+        service:
+          name: ntpd
+          state: restarted
+        when: ansible_os_family == "RedHat"
+
+      - name: restart ntp service on Debian servers
+        service:
+          name: ntp
+          state: restarted
+        when: ansible_os_family == "Debian"
+[root@ip-172-31-16-44 black_panther]#
